@@ -7,8 +7,8 @@ import node
 pygame.init()
 
 GRID_SIZE = 10
-GRID_X = 100
-GRID_Y = 100
+GRID_X = 20
+GRID_Y = 20
 MARGIN = 2
 os.environ['SDL_VIDEO_CENTERED'] = '1'
 screen = pygame.display.set_mode(
@@ -133,8 +133,12 @@ def improvedSolution(goal, openList, weight, pathCost):
 def main():
     grid = [[node.Node(i, j) for j in range(GRID_X)] for i in range(GRID_Y)]
 
-    start = grid[0][GRID_Y - 1]
-    goal = grid[GRID_X - 1][0]
+    startX = int(input("开始坐标的X坐标："))
+    startY = int(input("开始坐标的Y坐标："))
+    goalX = int(input("结束坐标的X坐标："))
+    goalY = int(input("结束坐标的Y坐标："))
+    start = grid[startX][startY]
+    goal = grid[goalX][goalY]
 
     grid = utils.setChildren(GRID_X, GRID_Y, grid, percentChanceForWall, actualPercentOfWalls, start, goal)
     utils.drawGrid(GRID_X, GRID_Y, grid, screen, MARGIN, GRID_SIZE, BLACK, GRAY, GREEN, RED)
