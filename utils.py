@@ -1,6 +1,7 @@
 import math
 from random import randint
 
+import numpy as np
 import pygame
 
 
@@ -67,10 +68,10 @@ def drawGrid(GRID_X, GRID_Y, grid, screen, MARGIN, GRID_SIZE, BLACK, GRAY, GREEN
                 drawRect(BLACK, x, y, screen, MARGIN, GRID_SIZE)
             else:
                 drawRect(GRAY, x, y, screen, MARGIN, GRID_SIZE)
-            if x == 0 and y == GRID_Y - 1:
-                drawRect(GREEN, x, y, screen, MARGIN, GRID_SIZE)
-            if x == GRID_X - 1 and y == 0:
-                drawRect(RED, x, y, screen, MARGIN, GRID_SIZE)
+            # if x == 0 and y == GRID_Y - 1:
+            #     drawRect(GREEN, x, y, screen, MARGIN, GRID_SIZE)
+            # if x == GRID_X - 1 and y == 0:
+            #     drawRect(RED, x, y, screen, MARGIN, GRID_SIZE)
 
 
 def randomColor():
@@ -85,11 +86,47 @@ def ED(current, goal):
 
 
 def setChildren(GRID_X, GRID_Y, grid, percentChanceForWall, actualPercentOfWalls, start, goal):
+    obstaclePositions = []
+    numObstacles = 36
+    obstacleSize = 2
+    # obstacleGap = 2
+
+    # Calculate number of obstacles per row/column
+    obstaclesPerRow = int(np.sqrt(numObstacles))
+    obstaclesPerColumn = numObstacles // obstaclesPerRow
+
+    # Calculate the gap between obstacles based on the grid size and number of obstacles
+    gapSize_X = (GRID_X - obstaclesPerRow * obstacleSize) // (obstaclesPerRow + 1)
+    gapSize_Y = (GRID_Y - obstaclesPerColumn * obstacleSize) // (obstaclesPerColumn + 1)
+
+    # Verify if it is possible to place the obstacles
+    if gapSize_X <= 0 or gapSize_Y <= 0:
+        raise ValueError('It is not possible to place the obstacles evenly with the current parameters')
+
+    # Generate obstacle positions
+    for i in range(obstaclesPerRow):
+        for j in range(obstaclesPerColumn):
+            x = (i + 1) * gapSize_X + i * obstacleSize
+            y = (j + 1) * gapSize_Y + j * obstacleSize
+
+            # Check if obstacle would intersect with start or goal
+            if (x <= start.x <= x + obstacleSize and y <= start.y <= y + obstacleSize) or \
+                    (x <= goal.x <= x + obstacleSize and y <= goal.y <= y + obstacleSize):
+                continue
+
+            obstaclePositions.append((x, y))
+
+    # Create obstacles
+    for x, y in obstaclePositions:
+        for dx in range(obstacleSize):
+            for dy in range(obstacleSize):
+                grid[x + dx][y + dy].setObstacle()
+                # actualPercentOfWalls += 1
+
     for y in range(GRID_X):
         for x in range(GRID_Y):
             if grid[x][y] != start and grid[x][y] != goal:
-                if randint(1, 100) <= percentChanceForWall:
-                    grid[x][y].setObstacle()
+                if grid[x][y].isObstacle:
                     actualPercentOfWalls += 1
             if north(grid, x, y, GRID_Y):
                 grid[x][y].children.append(north(grid, x, y, GRID_Y))
@@ -99,12 +136,13 @@ def setChildren(GRID_X, GRID_Y, grid, percentChanceForWall, actualPercentOfWalls
                 grid[x][y].children.append(west(grid, x, y, GRID_X))
             if east(grid, x, y, GRID_X):
                 grid[x][y].children.append(east(grid, x, y, GRID_X))
-            if northEast(grid, x, y, GRID_X, GRID_Y):
-                grid[x][y].children.append(northEast(grid, x, y, GRID_X, GRID_Y))
-            if northWest(grid, x, y, GRID_X, GRID_Y):
-                grid[x][y].children.append(northWest(grid, x, y, GRID_X, GRID_Y))
-            if southEast(grid, x, y, GRID_X, GRID_Y):
-                grid[x][y].children.append(southEast(grid, x, y, GRID_X, GRID_Y))
-            if southWest(grid, x, y, GRID_X, GRID_Y):
-                grid[x][y].children.append(southWest(grid, x, y, GRID_X, GRID_Y))
+            # 基于机器人只有四自由度时的修改
+            # if northEast(grid, x, y, GRID_X, GRID_Y):
+            #     grid[x][y].children.append(northEast(grid, x, y, GRID_X, GRID_Y))
+            # if northWest(grid, x, y, GRID_X, GRID_Y):
+            #     grid[x][y].children.append(northWest(grid, x, y, GRID_X, GRID_Y))
+            # if southEast(grid, x, y, GRID_X, GRID_Y):
+            #     grid[x][y].children.append(southEast(grid, x, y, GRID_X, GRID_Y))
+            # if southWest(grid, x, y, GRID_X, GRID_Y):
+            #     grid[x][y].children.append(southWest(grid, x, y, GRID_X, GRID_Y))
     return grid
